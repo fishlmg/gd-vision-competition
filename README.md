@@ -6,6 +6,10 @@
 
 2024 年视觉竞赛作品：运行在边缘设备上，通过 OpenCV + pyzbar 实时识别赛场中的**二维码**与**彩色区域**，解码二维码内容、判定颜色方位，为机器人提供导航/任务决策依据；同时集成 YOLO 目标检测并可将结果上报服务器。
 
+## 📷 效果展示
+
+仓库里还没有带检测框的识别结果图（调试输出如 `region_*.jpg` 被 `.gitignore` 排除，且原先就未入库）。`data/pictures/` 只是试跑用的输入样例（二维码、彩色几何图形），不是效果截图。本地跑完 `src/color.py` 后，可以把结果图补到本节。
+
 ## ✨ 特性
 
 - **颜色识别**：基于 HSV 颜色空间阈值分割，支持多颜色（红/绿/蓝/黄/橙/紫/粉/青/黑）目标检测
@@ -16,18 +20,39 @@
 
 ## 🗂 项目结构
 
+脚本里的相对路径（如 `data/pictures/...`）相对**仓库根目录**。下面的命令都在根目录执行。
+
+### `src/` 正式入口
+
 | 文件 | 功能 |
 | --- | --- |
-| `color.py` | **最终版**颜色识别主程序 |
-| `color1.py` / `color_fd.py` / `qrc_fd.py` | 基于 color.py 的迭代版本 |
-| `t-col.py` | HSV 颜色阈值调参工具 |
-| `QR_code.py` | 二维码检测与解码（pyzbar） |
-| `qrcode_fd.py` / `qrc_fd.py` / `ewm.py` | 二维码识别相关脚本 |
-| `picture.py` | 图像采集与预处理 |
-| `rtp.py` | YOLO 实时检测 + 结果上报 |
-| `1.py` | 二维码读取基础示例 |
-| `tp.py` / `tp1.py` / `test.py` | 功能测试与调试脚本 |
-| `BGR.txt` / `HSV.txt` | 颜色空间阈值参考笔记 |
+| `src/color.py` | **最终版**颜色识别主程序 |
+| `src/QR_code.py` | 二维码检测与解码（OpenCV `QRCodeDetector`） |
+| `src/t-col.py` | HSV 颜色阈值调参工具 |
+| `src/picture.py` | 按行列切分图像并保存子图 |
+| `src/rtp.py` | YOLO 实时检测 + 结果上报 |
+
+### `archive/` 迭代草稿
+
+| 文件 | 功能 |
+| --- | --- |
+| `archive/color1.py` / `archive/color_fd.py` | 基于 `color.py` 的颜色识别迭代 |
+| `archive/qrc_fd.py` | 按颜色掩膜筛选后再解码二维码 |
+| `archive/qrcode_fd.py` | 批量扫描目录中的二维码 |
+| `archive/ewm.py` | pyzbar 解码，并对照授权名单标记 |
+| `archive/1.py` | 二维码读取基础示例 |
+| `archive/tp.py` | 检测框文字避让试验 |
+| `archive/tp1.py` / `archive/test.py` | 分割与取色调试 |
+
+### `notes/` 与 `tools/`
+
+| 文件 | 功能 |
+| --- | --- |
+| `notes/BGR.txt` / `notes/HSV.txt` | 颜色空间阈值参考笔记 |
+| `notes/explain.txt` | 版本说明：`color.py` 为最终版 |
+| `tools/movie.py` | 原无扩展名文件 `movie`：moviepy 视频裁剪脚本（见下） |
+
+样例图片在 `data/pictures/`。
 
 ## 🚀 快速开始
 
@@ -37,13 +62,20 @@ pip install -r requirements.txt
 
 ```bash
 # 颜色识别（最终版）
-python color.py
+python src/color.py
 
 # 二维码识别
-python QR_code.py
+python src/QR_code.py
 
 # HSV 阈值调参
-python t-col.py
+python src/t-col.py
+```
+
+`tools/movie.py` 用 moviepy 按起止时间裁剪视频，不在比赛主流程里，也未写入 `requirements.txt`。需要时另装 `moviepy`，并改脚本底部的输入路径与时间后再运行：
+
+```bash
+pip install moviepy
+python tools/movie.py
 ```
 
 > **注意**：pyzbar 在 Linux 上需要系统依赖 `libzbar0`（`sudo apt install libzbar0`）。
@@ -70,7 +102,7 @@ OpenCV、NumPy、pyzbar、requests、ultralytics —— 详见 [requirements.txt
 
 ## 📝 说明
 
-调试输出的截图（`region_*.jpg` 等）不包含在仓库中（`.gitignore` 已排除）；上报地址通过环境变量配置。
+调试输出的截图（`region_*.jpg` 等）不包含在仓库中（`.gitignore` 已排除根目录图片）。`src/rtp.py` 在仓库根目录读取 `设备配置.txt` 的设备编号，并向脚本里的服务器地址 POST 检测结果；模型权重路径写在脚本内，权重文件不入库。
 
 ## 📄 许可证
 
